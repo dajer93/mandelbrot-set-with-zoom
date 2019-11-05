@@ -1,12 +1,12 @@
 const webpack = require('webpack')
 
 module.exports = {
-  entry: "./src/sketch.js",
+  entry: "./app/src/sketch.js",
   output: {
     path: __dirname,
-    filename: "./public/bundle.js",
-    hotUpdateChunkFilename: 'hot/hot-update.js',
-    hotUpdateMainFilename: 'hot/hot-update.json'
+    filename: "../public/bundle.js",
+    hotUpdateChunkFilename: '../hot/hot-update.js',
+    hotUpdateMainFilename: '../hot/hot-update.json'
   },
   module: {
     rules: [

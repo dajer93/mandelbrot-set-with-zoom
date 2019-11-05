@@ -18,10 +18,14 @@
     "webpack-merge": "^4.2.2"
   },
   "scripts": {
-    "start": "webpack --config webpack.config.dev.js",
-    "build": "webpack --config webpack.config.prod.js"
+    "start": "webpack --config app/webpack/dev.config.js",
+    "build": "webpack --config app/webpack/prod.config.js",
+    "serve": "node server/server.js"
   },
   "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mongoose": "^5.7.8",
     "p5": "^0.10.2"
   }
 }
