@@ -12,14 +12,17 @@ const mandlebrotSchema = new mongoose.Schema({
   offsetX: {
     type: Number,
     required: true,
-    default: Date.now
+    default: 0
   },
   offsetY: {
     type: Number,
     required: true,
-    default: Date.now
+    default: 0
   },
-  // image: {
-  //   type: 
-  // }
+  image: {
+    type: Object,
+    required: true
+  }
 })
+
+module.exports = mongoose.model('Mandelbrot', mandlebrotSchema)

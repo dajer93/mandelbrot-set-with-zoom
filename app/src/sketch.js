@@ -7,7 +7,7 @@ const maxIterations = 10000;
 let s = (sketch) => {  
   window.sketch = sketch;
   sketch.setup = () => {
-    sketch.createCanvas(sketch.windowWidth, sketch.windowHeight);
+    sketch.createCanvas(800, 600);
     sketch.pixelDensity(1);
     sketch.frameRate(30);
   }
@@ -124,4 +124,4 @@ function mouseWheel(event) {
   return false;
 }*/
 
-const P5 = new p5(s);
+const P5 = new p5(s, "p5-container");

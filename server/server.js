@@ -3,6 +3,7 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const mandelbrotRouter = require('./routes/mandelbrot')
+const Mandelbrot = require('./models/mandelbrot')
 
 mongoose.connect(process.env.DATABASE_URL, { useNewUrlParser: true })
 const db = mongoose.connection
@@ -15,7 +16,9 @@ app.use(express.json())
 
 app.use('/mandelbrot', mandelbrotRouter)
 
-app.get('/', (req, res) => res.sendFile('app/public/index.html', {'root': './'}))
+app.get('/', (req, res) => {
+  res.sendFile('app/public/index.html', {'root': './'})
+});
 app.get('/style.css', (req, res) => res.sendFile('app/public/style.css', {'root': './'}))
 app.get('/bundle.js', (req, res) => res.sendFile('app/public/bundle.js', {'root': './'}))
 
