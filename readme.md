@@ -4,5 +4,7 @@ This repository contains a p5.js implementation of the Mandelbrot set and a serv
 ## NPM scripts
 
 `yarn start` - to start the frontend webpack dev server
+
 `yarn build` - to build the frontend
+
 `yarn serve` - to start the server
