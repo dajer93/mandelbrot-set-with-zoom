@@ -1,7 +1,23 @@
 const express = require('express')
-const router = express.Router()
 const Mandelbrot = require('../models/mandelbrot')
+const multer = require("multer");
+const cloudinary = require("cloudinary");
+const cloudinaryStorage = require("multer-storage-cloudinary");
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+const storage = cloudinaryStorage({
+  cloudinary: cloudinary,
+  folder: "mandelbrot",
+  allowedFormats: ["jpg", "png"],
+  transformation: [{ width: 500, height: 500, crop: "limit" }]
+});
+const parser = multer({ storage: storage });
+
+const router = express.Router()
 // Get all mandelbrot images
 router.get('/', async (req, res) => {
   try {
@@ -17,13 +33,14 @@ router.get('/:id', (req, res) => {
 })
 
 // Create one mandelbrot image
-router.post('/', async (req, res) => {
+router.post('/', parser.single("image"), async (req, res) => {
   const mandelbrot = new Mandelbrot({
     zoom: req.body.zoom,
     maxIterations: req.body.maxIterations,
     offsetX: req.body.offsetX,
     offsetY: req.body.offsetY,
-    image: req.body.image
+    imageUrl: req.file.url,
+    imageId: req.file.public_id
   })
   try {
     const newMandelbrot = await mandelbrot.save()

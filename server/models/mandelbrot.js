@@ -19,8 +19,12 @@ const mandlebrotSchema = new mongoose.Schema({
     required: true,
     default: 0
   },
-  image: {
-    type: Object,
+  imageUrl: {
+    type: String,
+    required: true
+  },
+  imageId: {
+    type: String,
     required: true
   }
 })
