@@ -1,30 +1,50 @@
 import * as p5 from 'p5';
+import axios from 'axios';
 
-let images = []
+let dimensions = {
+  w: 400,
+  h: 400,
+}
+
+let images = [];
+let loadedImages = [];
 let zoom = 2;
-const maxIterations = 10000;
+let zoomStep = 1.5;
+let sketchCanvas;
+let renderTime;
+const maxIterations = 100000;
 
 let s = (sketch) => {  
   window.sketch = sketch;
+  sketch.preload = () => {
+    for(let key in images){
+      loadedImages[key] = sketch.loadImage(images[key]);
+    }
+  }
   sketch.setup = () => {
-    sketch.createCanvas(800, 600);
+    sketchCanvas = sketch.createCanvas(dimensions.w, dimensions.h);
     sketch.pixelDensity(1);
     sketch.frameRate(30);
   }
 
   sketch.draw = () => {
     sketch.loadPixels();
-    let start = sketch.millis();
-    if (typeof images[zoom] === "undefined" ) {
+    
+    if (typeof loadedImages[zoom] === "undefined" ) {
+      /** Start render time log */
+      let start = sketch.millis();
+
+      /** Set variables for calculations */
       let w = 2;
       let h = (w * sketch.height) / sketch.width;
-      
       let offsetX = 0.4;
       let offsetY = 0.193938;
       let minx = -w*zoom+offsetX;
       let maxx = w*zoom+offsetX;
       let miny = -h*zoom+offsetY;
       let maxy = h*zoom+offsetY;
+
+      /** Main loop for calculating the pixels */
       for(var x = 0; x < sketch.width; x++){
         for(var y = 0; y < sketch.height; y++){
           
@@ -66,25 +86,52 @@ let s = (sketch) => {
           sketch.pixels[pix + 1] = g != 0 ? g : 0;
           sketch.pixels[pix + 2] = b != 0 ? b : 0;
           sketch.pixels[pix + 3] = 255;
-          images[zoom] = sketch.pixels;
         }
       }
+      loadedImages[zoom] = sketch.pixels;
+      sketch.updatePixels();
+
+      /** Log render time */
+      let end = sketch.millis();
+      renderTime = end-start;
+      console.log("Render time: " + renderTime + " milliseconds");
+
+      /** Convert canvas to blob and send it to the server */
+      sketchCanvas.canvas.toBlob(function(blob){
+        const data = new FormData();
+        data.append("image", blob);
+        data.append("offsetX", offsetX);
+        data.append("offsetY", offsetY);
+        data.append("zoom", zoom);
+        data.append("maxIterations", maxIterations);
+        const config = { headers: { 'content-type': 'multipart/form-data' } };
+        axios.post('/mandelbrot', data, config)
+          .then( res => {
+            console.log(res);
+          }).catch( err => {
+            console.err(err);
+          });
+      });
+
     } else {
-      for(var x = 0; x < sketch.width; x++){
-        for(var y = 0; y < sketch.height; y++){
-          var pix = (x + y * sketch.width) * 4;
-          sketch.pixels[pix + 0] = images[zoom][pix + 0];
-          sketch.pixels[pix + 1] = images[zoom][pix + 1];
-          sketch.pixels[pix + 2] = images[zoom][pix + 2];
-          sketch.pixels[pix + 3] = 255;
+      /** If image is already loaded */
+      if(loadedImages[zoom].length === dimensions.w * dimensions.h * 4) {
+        for(var x = 0; x < sketch.width; x++){
+          for(var y = 0; y < sketch.height; y++){
+            var pix = (x + y * sketch.width) * 4;
+            sketch.pixels[pix + 0] = loadedImages[zoom][pix + 0];
+            sketch.pixels[pix + 1] = loadedImages[zoom][pix + 1];
+            sketch.pixels[pix + 2] = loadedImages[zoom][pix + 2];
+            sketch.pixels[pix + 3] = loadedImages[zoom][pix + 3];
+          }
         }
+        sketch.updatePixels();
+      } else {
+        sketch.image(loadedImages[zoom], 0, 0, dimensions.w, dimensions.h);
       }
     }
-    let end = sketch.millis();
-    let renderTime = end-start;
-    console.log(renderTime + " milliseconds");
-    sketch.updatePixels();
     
+    /** Rest: write information about the render on the canvas */
     sketch.strokeWeight(4);
     sketch.stroke(0);
     sketch.fill(255);
@@ -103,10 +150,10 @@ let s = (sketch) => {
 
   sketch.keyPressed = () => {
     if(sketch.keyCode == sketch.DOWN_ARROW) {
-      zoom = zoom * 2;
+      zoom = zoom * zoomStep;
     }
     if(sketch.keyCode == sketch.UP_ARROW) {
-      zoom = zoom / 2;
+      zoom = zoom / zoomStep;
     }
     sketch.loop();
   }
@@ -124,4 +171,9 @@ function mouseWheel(event) {
   return false;
 }*/
 
-const P5 = new p5(s, "p5-container");
+axios.get('/mandelbrot').then( res => {
+  for (let i = 0; i < res.data.length; i++){
+    images[res.data[i].zoom] = res.data[i].imageUrl;
+  }
+  const P5 = new p5(s, "p5-container");
+});
